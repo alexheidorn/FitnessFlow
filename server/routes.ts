@@ -29,6 +29,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
 
+    console.log('Strava redirect URI:', STRAVA_REDIRECT_URI);
+    
     const authUrl = `https://www.strava.com/oauth/authorize?` +
       `client_id=${STRAVA_CLIENT_ID}&` +
       `response_type=code&` +
@@ -36,7 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `approval_prompt=force&` +
       `scope=read,activity:read_all`;
     
-    res.json({ authUrl });
+    res.json({ authUrl, redirectUri: STRAVA_REDIRECT_URI });
   });
 
   // Handle Strava OAuth callback redirect

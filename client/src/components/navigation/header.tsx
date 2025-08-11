@@ -48,9 +48,10 @@ export default function Header({ user }: HeaderProps) {
       window.location.href = authUrl;
     } catch (error: any) {
       console.error('Strava auth error:', error);
+      const errorMessage = error.response?.data?.message || "Unable to connect to Strava. Make sure the redirect URI 'workspace.alexheidorn12.repl.co' is added to your Strava app settings.";
       toast({
-        title: "Connection Failed",
-        description: error.response?.data?.message || "Unable to connect to Strava. Please make sure Strava credentials are configured.",
+        title: "Connection Failed", 
+        description: errorMessage,
         variant: "destructive",
       });
     }

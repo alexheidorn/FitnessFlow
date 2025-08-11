@@ -2,6 +2,14 @@
 
 This is a fitness tracking application that integrates with Strava to help users monitor their athletic activities and plan future workouts. The application provides a comprehensive dashboard for viewing activity statistics, planning workouts, and analyzing performance data through interactive charts and visualizations.
 
+## Recent Changes (August 11, 2025)
+- Restructured dashboard layout to make the training calendar the focal point (left side, larger)
+- Enhanced calendar design with better spacing, borders, and visual activity indicators
+- Fixed Strava OAuth integration with proper redirect URI handling
+- Added callback route for Strava authentication flow
+- Improved error handling for missing Strava credentials
+- Fixed all TypeScript/LSP diagnostics in storage layer and components
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
