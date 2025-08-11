@@ -19,11 +19,7 @@ export const completeStravaAuth = async (code: string): Promise<StravaAuthRespon
 export const logout = async (): Promise<void> => {
   const sessionToken = localStorage.getItem('sessionToken');
   if (sessionToken) {
-    await apiRequest("POST", "/api/auth/logout", {}, {
-      headers: {
-        'Authorization': `Bearer ${sessionToken}`
-      }
-    });
+    await apiRequest("POST", "/api/auth/logout", {});
     localStorage.removeItem('sessionToken');
   }
 };

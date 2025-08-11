@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import PlannedActivityModal from "./planned-activity-modal";
+import PlannedActivityModal from "@/components/dashboard/planned-activity-modal";
 
 interface Activity {
   id: string;
@@ -105,10 +105,10 @@ export default function TrainingCalendar({ activities, plannedActivities }: Trai
 
   return (
     <>
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold text-charcoal">Training Calendar</CardTitle>
+            <CardTitle className="text-xl font-bold text-charcoal">Training Calendar</CardTitle>
             <Button
               size="sm"
               onClick={() => {
@@ -121,6 +121,7 @@ export default function TrainingCalendar({ activities, plannedActivities }: Trai
               Plan Activity
             </Button>
           </div>
+          <p className="text-gray-600 mt-1">Click on any date to plan activities</p>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -155,10 +156,10 @@ export default function TrainingCalendar({ activities, plannedActivities }: Trai
             </div>
             
             {/* Calendar Grid */}
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-2">
               {monthDays.map((date, index) => {
                 if (!date) {
-                  return <div key={index} className="aspect-square p-1"></div>;
+                  return <div key={index} className="aspect-square p-2"></div>;
                 }
 
                 const isToday = date.toDateString() === new Date().toDateString();
@@ -168,33 +169,37 @@ export default function TrainingCalendar({ activities, plannedActivities }: Trai
                 return (
                   <div
                     key={date.toISOString()}
-                    className="aspect-square p-1 relative cursor-pointer hover:bg-gray-50 rounded"
+                    className={`aspect-square p-2 relative cursor-pointer hover:bg-gray-50 rounded-lg border transition-colors ${
+                      isToday ? 'border-strava bg-strava/5' : 'border-gray-200'
+                    } ${hasActivities ? 'border-strava/30' : ''}`}
                     onClick={() => handleDateClick(date)}
                   >
-                    <div className={`text-xs text-center ${
+                    <div className={`text-sm font-medium text-center ${
                       isToday 
-                        ? 'bg-strava text-white rounded-full w-6 h-6 flex items-center justify-center mx-auto' 
-                        : ''
+                        ? 'bg-strava text-white rounded-full w-7 h-7 flex items-center justify-center mx-auto' 
+                        : 'text-charcoal'
                     }`}>
                       {date.getDate()}
                     </div>
                     
                     {hasActivities && (
                       <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex space-x-1">
-                        {dayActivities.slice(0, 2).map((activity, i) => (
+                        {dayActivities.slice(0, 3).map((activity, i) => (
                           <div
                             key={`activity-${i}`}
-                            className={`w-2 h-2 rounded-full ${getActivityColor(activity.type)}`}
+                            className={`w-1.5 h-1.5 rounded-full ${getActivityColor(activity.type)}`}
+                            title={activity.name}
                           />
                         ))}
-                        {dayPlanned.slice(0, 2).map((planned, i) => (
+                        {dayPlanned.slice(0, 3).map((planned, i) => (
                           <div
                             key={`planned-${i}`}
-                            className="w-2 h-2 rounded-full bg-gray-300 border border-gray-400"
+                            className="w-1.5 h-1.5 rounded-full bg-gray-400 border border-gray-500"
+                            title={planned.name}
                           />
                         ))}
-                        {(dayActivities.length + dayPlanned.length > 2) && (
-                          <div className="w-2 h-2 rounded-full bg-gray-400" />
+                        {(dayActivities.length + dayPlanned.length > 3) && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-gray-500" title={`+${dayActivities.length + dayPlanned.length - 3} more`} />
                         )}
                       </div>
                     )}

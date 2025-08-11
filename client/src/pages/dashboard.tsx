@@ -11,6 +11,26 @@ import { useEffect, useState } from "react";
 
 export default function Dashboard() {
   const [filters, setFilters] = useState({});
+
+  // Handle Strava OAuth callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const success = urlParams.get('success');
+    const error = urlParams.get('error');
+    
+    if (token && success) {
+      localStorage.setItem('sessionToken', token);
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, '/');
+      // Refresh the page to show authenticated state
+      window.location.reload();
+    } else if (error) {
+      console.error('Auth error:', error);
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, '/');
+    }
+  }, []);
   
   const { data: user } = useQuery({
     queryKey: ["/api/user"],
@@ -83,29 +103,34 @@ export default function Dashboard() {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-2xl font-bold text-charcoal">Training Dashboard</h2>
               <p className="text-gray-600 mt-1">Track your progress and plan ahead</p>
             </div>
           </div>
-
-          <QuickStats stats={stats} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-8 space-y-6">
-            <ActivityCharts activities={activities} />
-            <RecentActivities activities={activities} />
-          </div>
-          
-          <div className="lg:col-span-4 space-y-6">
+          <div className="lg:col-span-5 space-y-6">
             <TrainingCalendar 
               activities={activities} 
               plannedActivities={plannedActivities} 
             />
-            <ActivityFilters filters={filters} onFiltersChange={setFilters} />
+            <QuickStats stats={stats} />
             <GoalsWidget stats={stats} />
+          </div>
+          
+          <div className="lg:col-span-7 space-y-6">
+            <ActivityCharts activities={activities} />
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <div className="xl:col-span-2">
+                <RecentActivities activities={activities} />
+              </div>
+              <div className="xl:col-span-1">
+                <ActivityFilters filters={filters} onFiltersChange={setFilters} />
+              </div>
+            </div>
           </div>
         </div>
       </main>

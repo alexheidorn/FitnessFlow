@@ -72,7 +72,15 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      stravaId: insertUser.stravaId || null,
+      stravaAccessToken: insertUser.stravaAccessToken || null,
+      stravaRefreshToken: insertUser.stravaRefreshToken || null,
+      stravaTokenExpiry: insertUser.stravaTokenExpiry || null,
+      isStravaConnected: insertUser.isStravaConnected || false
+    };
     this.users.set(id, user);
     return user;
   }
@@ -129,7 +137,13 @@ export class MemStorage implements IStorage {
       ...insertActivity, 
       id,
       stravaId: null,
-      isFromStrava: false
+      isFromStrava: false,
+      distance: insertActivity.distance || null,
+      duration: insertActivity.duration || null,
+      elevationGain: insertActivity.elevationGain || null,
+      averagePace: insertActivity.averagePace || null,
+      averageSpeed: insertActivity.averageSpeed || null,
+      averageHeartRate: insertActivity.averageHeartRate || null
     };
     this.activities.set(id, activity);
     return activity;
@@ -164,7 +178,10 @@ export class MemStorage implements IStorage {
     const plannedActivity: PlannedActivity = { 
       ...insertPlannedActivity, 
       id,
-      isCompleted: false
+      isCompleted: false,
+      plannedDistance: insertPlannedActivity.plannedDistance || null,
+      plannedDuration: insertPlannedActivity.plannedDuration || null,
+      notes: insertPlannedActivity.notes || null
     };
     this.plannedActivities.set(id, plannedActivity);
     return plannedActivity;
@@ -209,11 +226,11 @@ export class MemStorage implements IStorage {
   }
 
   async deleteUserSessions(userId: string): Promise<void> {
-    for (const [token, session] of this.sessions.entries()) {
+    Array.from(this.sessions.entries()).forEach(([token, session]) => {
       if (session.userId === userId) {
         this.sessions.delete(token);
       }
-    }
+    });
   }
 }
 

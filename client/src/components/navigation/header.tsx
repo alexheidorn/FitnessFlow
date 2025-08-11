@@ -46,10 +46,11 @@ export default function Header({ user }: HeaderProps) {
     try {
       const authUrl = await initiateStravaAuth();
       window.location.href = authUrl;
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Strava auth error:', error);
       toast({
         title: "Connection Failed",
-        description: "Unable to connect to Strava",
+        description: error.response?.data?.message || "Unable to connect to Strava. Please make sure Strava credentials are configured.",
         variant: "destructive",
       });
     }

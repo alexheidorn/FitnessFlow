@@ -190,7 +190,7 @@ export default function PlannedActivityModal({ isOpen, onClose, selectedDate }: 
                       <Input 
                         type="number" 
                         placeholder="0" 
-                        {...field}
+                        value={field.value || ''}
                         onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                       />
                     </FormControl>
@@ -208,7 +208,7 @@ export default function PlannedActivityModal({ isOpen, onClose, selectedDate }: 
                       <Input 
                         type="number" 
                         placeholder="0" 
-                        {...field}
+                        value={field.value || ''}
                         onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                       />
                     </FormControl>
@@ -229,7 +229,8 @@ export default function PlannedActivityModal({ isOpen, onClose, selectedDate }: 
                       placeholder="Add notes about this planned activity..." 
                       className="resize-none"
                       rows={3}
-                      {...field} 
+                      value={field.value || ''}
+                      onChange={field.onChange}
                     />
                   </FormControl>
                   <FormMessage />

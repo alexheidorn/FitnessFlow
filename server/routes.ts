@@ -5,9 +5,9 @@ import { insertActivitySchema, insertPlannedActivitySchema, insertUserSchema } f
 import { randomUUID } from "crypto";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  const STRAVA_CLIENT_ID = process.env.STRAVA_CLIENT_ID || "your_strava_client_id";
-  const STRAVA_CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET || "your_strava_client_secret";
-  const STRAVA_REDIRECT_URI = process.env.STRAVA_REDIRECT_URI || "http://localhost:5000/api/auth/strava/callback";
+  const STRAVA_CLIENT_ID = process.env.STRAVA_CLIENT_ID;
+  const STRAVA_CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET;
+  const STRAVA_REDIRECT_URI = process.env.STRAVA_REDIRECT_URI || `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/auth/strava/callback`;
 
   // Helper function to get current user from session
   async function getCurrentUser(req: any) {
@@ -22,6 +22,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Auth routes
   app.get("/api/auth/strava", (req, res) => {
+    if (!STRAVA_CLIENT_ID || !STRAVA_CLIENT_SECRET) {
+      return res.status(500).json({ 
+        error: "Strava credentials not configured",
+        message: "Please set STRAVA_CLIENT_ID and STRAVA_CLIENT_SECRET environment variables"
+      });
+    }
+
     const authUrl = `https://www.strava.com/oauth/authorize?` +
       `client_id=${STRAVA_CLIENT_ID}&` +
       `response_type=code&` +
@@ -30,6 +37,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `scope=read,activity:read_all`;
     
     res.json({ authUrl });
+  });
+
+  // Handle Strava OAuth callback redirect
+  app.get("/api/auth/strava/callback", async (req, res) => {
+    try {
+      const { code, error } = req.query;
+      
+      if (error) {
+        return res.redirect(`/?error=${encodeURIComponent('Strava authorization failed')}`);
+      }
+      
+      if (!code) {
+        return res.redirect(`/?error=${encodeURIComponent('No authorization code received')}`);
+      }
+
+      // Exchange code for access token
+      const tokenResponse = await fetch('https://www.strava.com/oauth/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          client_id: STRAVA_CLIENT_ID,
+          client_secret: STRAVA_CLIENT_SECRET,
+          code,
+          grant_type: 'authorization_code',
+        }),
+      });
+      
+      const tokenData = await tokenResponse.json();
+      
+      if (!tokenResponse.ok) {
+        return res.redirect(`/?error=${encodeURIComponent('Failed to exchange code for token')}`);
+      }
+
+      // Check if user exists
+      let user = await storage.getUserByStravaId(tokenData.athlete.id.toString());
+      
+      if (!user) {
+        // Create new user
+        user = await storage.createUser({
+          username: tokenData.athlete.username || `strava_${tokenData.athlete.id}`,
+          stravaId: tokenData.athlete.id.toString(),
+          stravaAccessToken: tokenData.access_token,
+          stravaRefreshToken: tokenData.refresh_token,
+          stravaTokenExpiry: new Date(tokenData.expires_at * 1000),
+          isStravaConnected: true,
+        });
+      } else {
+        // Update existing user
+        user = await storage.updateUser(user.id, {
+          stravaAccessToken: tokenData.access_token,
+          stravaRefreshToken: tokenData.refresh_token,
+          stravaTokenExpiry: new Date(tokenData.expires_at * 1000),
+          isStravaConnected: true,
+        });
+      }
+
+      // Create session
+      const sessionToken = randomUUID();
+      await storage.createSession({
+        userId: user!.id,
+        sessionToken,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      });
+
+      // Redirect to frontend with session token
+      res.redirect(`/?token=${sessionToken}&success=true`);
+    } catch (error) {
+      console.error('Strava auth error:', error);
+      res.redirect(`/?error=${encodeURIComponent('Authentication failed')}`);
+    }
   });
 
   app.post("/api/auth/strava/callback", async (req, res) => {

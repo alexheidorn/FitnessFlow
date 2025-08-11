@@ -21,7 +21,7 @@ export default function ActivityFilters({ filters, onFiltersChange }: ActivityFi
   });
 
   const handleFilterChange = (key: string, value: any) => {
-    setLocalFilters(prev => ({
+    setLocalFilters((prev: any) => ({
       ...prev,
       [key]: value
     }));
